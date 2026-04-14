@@ -17,7 +17,7 @@
         ],
         "Icon": "folder-cloud",
         "Id": "org.kde.plasma.rclone-mounts",
-        "License": "GPL-2.0+",
+        "License": "MIT",
         "Name": "Rclone Mounts",
         "Version": "1.0.0",
         "Website": ""
