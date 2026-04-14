@@ -1,0 +1,29 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "",
+                "Name": "JonatanRek"
+            }
+        ],
+        "BugReportUrl": "",
+        "Category": "System Information",
+        "Description": "Správa Rclone mount pointů z KDE Plasma panelu.",
+        "EnabledByDefault": true,
+        "FormFactors": [
+            "desktop",
+            "panel"
+        ],
+        "Icon": "folder-cloud",
+        "Id": "org.kde.plasma.rclone-mounts",
+        "License": "GPL-2.0+",
+        "Name": "Rclone Mounts",
+        "Version": "1.0.0",
+        "Website": ""
+    },
+    "X-KDE-Keywords": "rclone,mount,cloud,storage",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-NotificationArea": "true",
+    "X-Plasma-NotificationAreaCategory": "SystemServices"
+}
