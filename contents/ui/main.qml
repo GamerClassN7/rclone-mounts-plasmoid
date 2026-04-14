@@ -69,6 +69,7 @@ PlasmoidItem {
     property var    remoteTypes:     ({})
     property var    transferHistory: []   // dokončené přenosy
     property var    activeTransfers: []   // právě probíhající
+    property var    _activePctCache: ({}) // clamped pct per filename – nikdy neklesá
 
     // ── Pomocné funkce ───────────────────────────────────────────────────────
     function formatSize(bytes) {
@@ -232,11 +233,54 @@ PlasmoidItem {
                     var sp = JSON.parse(out)
                     // Zobrazuj všechny probíhající přenosy (i bytes=0 na začátku uploadu)
                     // vyřaď jen 100% dokončené (než je přesune core/transferred)
-                    activeTransfers = sp.transferring
+                    var raw = sp.transferring
                         ? sp.transferring.filter(function(t) {
                             return (t.percentage || 0) < 100
                           })
                         : []
+                    // Vyčisti cache pro soubory, které už neprobíhají
+                    var activeNames = {}
+                    raw.forEach(function(t) { if (t.name) activeNames[t.name] = true })
+                    var newCache = {}
+                    Object.keys(_activePctCache).forEach(function(k) {
+                        if (activeNames[k]) newCache[k] = _activePctCache[k]
+                    })
+                    // Agreguj: file.txt + file.txt.part → jeden záznam pod "file.txt"
+                    var byDisplayName = {}
+                    raw.forEach(function(t) {
+                        var rawName = t.name || ""
+                        var displayName = rawName.replace(/\.part$/, "")
+                        var p = t.percentage || 0
+                        var sz = t.size || 0
+                        var by = t.bytes || 0
+                        if (!p && sz > 0 && by > 0) p = Math.min(99, by / sz * 100)
+                        // Clamp: pct nikdy neklesá
+                        var cacheKey = displayName
+                        var prev = newCache[cacheKey] || 0
+                        p = Math.max(prev, p)
+                        if (p < 99) newCache[cacheKey] = p
+                        var existing = byDisplayName[displayName]
+                        if (!existing) {
+                            var clone = Object.assign({}, t)
+                            clone._displayName = displayName
+                            clone._pct = p
+                            byDisplayName[displayName] = clone
+                        } else {
+                            // Sloučit: vezmi větší bytes, větší pct, preferuj non-.part záznam
+                            if ((t.bytes || 0) > (existing.bytes || 0)) existing.bytes = t.bytes
+                            if (p > existing._pct) existing._pct = p
+                            // Pokud existující byl .part a nový není → preferuj non-.part metadata
+                            if (rawName === displayName) {
+                                existing.size    = t.size
+                                existing.speed   = t.speed
+                                existing.eta     = t.eta
+                                existing.srcFs   = t.srcFs
+                                existing.dstFs   = t.dstFs
+                            }
+                        }
+                    })
+                    activeTransfers = Object.keys(byDisplayName).map(function(k){ return byDisplayName[k] })
+                    _activePctCache = newCache
                 } catch(e) { activeTransfers = [] }
             } else {
                 activeTransfers = []

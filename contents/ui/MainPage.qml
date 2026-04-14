@@ -251,20 +251,14 @@ ColumnLayout {
 
                         property var t: modelData
                         property string fname: {
-                            var n = t.name || ""
+                            var n = t._displayName || t.name || ""
                             var s = n.lastIndexOf("/")
                             return s >= 0 ? n.substring(s + 1) : n
                         }
-                        // percentage může být 0 i v půlce uploadu (mount) → dopočítej z bytes/size
-                        property real pct: {
-                            var p = t.percentage || 0
-                            if (p > 0) return p
-                            var sz = t.size || 0
-                            var by = t.bytes || 0
-                            return (sz > 0 && by > 0) ? Math.min(99, by / sz * 100) : 0
-                        }
-                        // animace jen pokud neznáme velikost (VFS mount); known size → fill bar od 0%
-                        property bool indeterminate: pct === 0 && (t.size || 0) <= 0
+                        // pct je předpočítáno a clampováno v main.qml (_activePctCache)
+                        property real pct: t._pct || 0
+                        // animace jen pokud opravdu nic nevíme (začátek přenosu)
+                        property bool indeterminate: pct === 0
                         property string speed: formatSpeed(t.speed || 0)
                         // Směr: upload = lokální zdroj → remote; download = remote → lokální cíl
                         property bool isUpload: {
@@ -295,8 +289,9 @@ ColumnLayout {
                                 font.pixelSize: Kirigami.Units.gridUnit * 0.85
                             }
                             PlasmaComponents.Label {
-                                text: indeterminate ? (speed ? speed : "…")
-                                                    : pct.toFixed(0) + "%" + (speed ? "  " + speed : "")
+                                text: indeterminate
+                                    ? (formatSize(t.bytes || 0) + (speed ? "  " + speed : ""))
+                                    : pct.toFixed(0) + "%" + (speed ? "  " + speed : "")
                                 font.pixelSize: 11
                                 opacity: 0.6
                             }
