@@ -22,12 +22,12 @@ PlasmoidItem {
 
     toolTipMainText: "Rclone Mounts"
     toolTipSubText: rcRunning
-                    ? (Object.keys(activeMounts).length + " / " + remotes.length + " připojeno")
-                    : "RC daemon neběží"
+                    ? (Object.keys(activeMounts).length + " / " + remotes.length + " mounted")
+                    : "RC daemon is not running"
 
     Plasmoid.contextualActions: [
         PlasmaCore.Action {
-            text: rcRunning ? "Zastavit RC Daemon" : "Spustit RC Daemon"
+            text: rcRunning ? "Stop RC Daemon" : "Start RC Daemon"
             icon.name: rcRunning ? "media-playback-stop" : "media-playback-start"
             onTriggered: {
                 if (rcRunning) {
@@ -86,11 +86,11 @@ PlasmoidItem {
             var d   = new Date(isoStr)
             var now = new Date()
             var sec = Math.floor((now - d) / 1000)
-            if (sec < 5)     return "před chvílí"
-            if (sec < 60)    return "před " + sec + " s"
-            if (sec < 3600)  return "před " + Math.floor(sec / 60) + " min"
-            if (sec < 86400) return "před " + Math.floor(sec / 3600) + " hod"
-            return "před " + Math.floor(sec / 86400) + " d"
+            if (sec < 5)     return "just now"
+            if (sec < 60)    return sec + "s ago"
+            if (sec < 3600)  return Math.floor(sec / 60) + " min ago"
+            if (sec < 86400) return Math.floor(sec / 3600) + " hr ago"
+            return Math.floor(sec / 86400) + " d ago"
         } catch(e) { return "" }
     }
 
@@ -128,10 +128,13 @@ PlasmoidItem {
         return ""
     }
 
-    // Rychlost přenosu
+    // Rychlost přenosu (2 desetinná místa)
     function formatSpeed(bps) {
         if (!bps || bps <= 0) return ""
-        return formatSize(bps) + "/s"
+        if (bps < 1024)       return bps.toFixed(2) + " B/s"
+        if (bps < 1048576)    return (bps / 1024).toFixed(2) + " KB/s"
+        if (bps < 1073741824) return (bps / 1048576).toFixed(2) + " MB/s"
+        return (bps / 1073741824).toFixed(2) + " GB/s"
     }
 
     function remoteIcon(remote) {
@@ -214,12 +217,12 @@ PlasmoidItem {
             } else {
                 rcRunning = false
                 activeMounts = {}
-                errorMsg = "RC daemon neběží na portu " + rcPort + "."
+                errorMsg = "RC daemon is not running on port " + rcPort + "."
             }
             return
         }
         if (cmd.indexOf("mount/mount") !== -1 || cmd.indexOf("mount/unmount") !== -1) {
-            errorMsg = (code !== 0) ? "Chyba: " + err : ""
+            errorMsg = (code !== 0) ? "Error: " + err : ""
             Qt.callLater(checkDaemon)
             return
         }
@@ -252,7 +255,7 @@ PlasmoidItem {
                             var name = t.name || ""
                             // Přeskoč temp soubory (qt_temp.*, .tmp, ~*, atd.) pokud nemají chybu
                             var baseName = name.substring(name.lastIndexOf("/") + 1)
-                            var isTmp = /^qt_temp\.|^\..*[a-zA-Z0-9]{5,}$|^\.~lock\.|^~/.test(baseName)
+                            var isTmp = /^qt_temp\.|^\..*[a-zA-Z0-9]{5,}$|^\.~lock\.|^~|\.part$/.test(baseName)
                             if (isTmp && !(t.error && t.error !== "")) return
                             var prev = byName[name]
                             if (!prev) {
@@ -294,7 +297,7 @@ PlasmoidItem {
     function checkDaemon()    { exe.run("rclone rc mount/listmounts --rc-addr=" + rcAddr + " 2>&1") }
     function checkTransfers() { if (rcRunning) exe.run("rclone rc core/transferred --rc-addr=" + rcAddr + " 2>&1") }
     function checkStats()     { if (rcRunning) exe.run("rclone rc core/stats --rc-addr=" + rcAddr + " 2>&1") }
-    function startDaemon()    { errorMsg = "Spouštím..."; exe.run("rclone rcd --rc-addr=" + rcAddr + " --rc-no-auth &") }
+    function startDaemon()    { errorMsg = "Starting..."; exe.run("rclone rcd --rc-addr=" + rcAddr + " --rc-no-auth &") }
     function openFolder(path) { exe.run("xdg-open '" + path + "'") }
 
     // Vytáhne čitelnou část chyby – odstraní JSON blok "Details: [...]" od rclone/Google API
@@ -317,12 +320,12 @@ PlasmoidItem {
 
     function doMount(remote) {
         var path = mountBase + "/" + remote.replace(/:$/, "")
-        errorMsg = "Připojuji " + remote + "..."
+        errorMsg = "Mounting " + remote + "..."
         exe.run("mkdir -p '" + path + "' && rclone rc mount/mount fs=" + remote
                 + " mountPoint='" + path + "' --rc-addr=" + rcAddr)
     }
     function doUnmount(mp) {
-        errorMsg = "Odpojuji..."
+        errorMsg = "Unmounting..."
         exe.run("rclone rc mount/unmount mountPoint='" + mp + "' --rc-addr=" + rcAddr)
     }
 

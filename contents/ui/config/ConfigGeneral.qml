@@ -33,17 +33,17 @@ KCM.SimpleKCM {
         QQC2.CheckBox {
             id: autoStartCheck
             Kirigami.FormData.label: "Autostart:"
-            text: "Spustit daemon automaticky pokud neběží"
+            text: "Start daemon automatically if not running"
         }
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: "Mount pointy"
+            Kirigami.FormData.label: "Mount Points"
         }
 
         QQC2.TextField {
             id: mountBaseField
-            Kirigami.FormData.label: "Základní složka:"
+            Kirigami.FormData.label: "Base folder:"
             placeholderText: "$HOME/mnt/rclone"
             Layout.minimumWidth: 280
         }
@@ -51,18 +51,18 @@ KCM.SimpleKCM {
         Kirigami.InlineMessage {
             Kirigami.FormData.label: " "
             Layout.fillWidth: true
-            text: "Každý remote se připojí jako podsložka (např. ~/mnt/rclone/gdrive)"
+            text: "Each remote will be mounted as a subfolder (e.g. ~/mnt/rclone/gdrive)"
             visible: true
         }
 
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: "Chování"
+            Kirigami.FormData.label: "Behavior"
         }
 
         QQC2.SpinBox {
             id: pollSpin
-            Kirigami.FormData.label: "Interval obnovy (s):"
+            Kirigami.FormData.label: "Poll interval (s):"
             from: 5
             to: 300
             stepSize: 5
@@ -70,8 +70,8 @@ KCM.SimpleKCM {
 
         QQC2.CheckBox {
             id: fetchOnStartCheck
-            Kirigami.FormData.label: "Načíst při startu:"
-            text: "Načíst stav mountů při spuštění"
+            Kirigami.FormData.label: "Fetch on start:"
+            text: "Fetch mount states on startup"
         }
     }
 }

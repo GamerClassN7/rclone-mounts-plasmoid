@@ -26,7 +26,7 @@ ColumnLayout {
         }
         PlasmaComponents.TabButton {
             icon.name: "view-history"
-            text: "Historie"
+            text: "History"
         }
     }
 
@@ -52,7 +52,7 @@ ColumnLayout {
                     id: searchField
                     Layout.fillWidth: true
                     Layout.margins: Kirigami.Units.smallSpacing
-                    placeholderText: "Hledat remote..."
+                    placeholderText: "Search remote..."
                     onTextChanged: filterText = text.toLowerCase()
                 }
 
@@ -60,7 +60,7 @@ ColumnLayout {
                     icon.name: "view-refresh"
                     onClicked: { fetchRemotes(); checkDaemon() }
                     display: QQC2.AbstractButton.IconOnly
-                    PlasmaComponents.ToolTip { text: "Obnovit" }
+                    PlasmaComponents.ToolTip { text: "Refresh" }
                 }
             }
 
@@ -70,7 +70,7 @@ ColumnLayout {
                 Layout.margins: Kirigami.Units.smallSpacing
                 visible: !rcRunning
                 type: Kirigami.MessageType.Error
-                text: errorMsg !== "" ? errorMsg : "RC daemon neběží — klikni ▶ pro spuštění"
+                text: errorMsg !== "" ? errorMsg : "RC daemon is not running — click ▶ to start"
             }
 
             // Banner: chyba mount/unmount
@@ -134,7 +134,7 @@ ColumnLayout {
                                     Layout.fillWidth: true
                                 }
                                 PlasmaComponents.Label {
-                                    text: del.mounted ? del.mountPath : "Nepřipojeno"
+                                    text: del.mounted ? del.mountPath : "Not mounted"
                                     font.pixelSize: Kirigami.Units.gridUnit * 0.75
                                     elide: Text.ElideRight
                                     opacity: 0.7
@@ -151,12 +151,12 @@ ColumnLayout {
                                 Layout.alignment: Qt.AlignVCenter
                                 onClicked: openFolder(del.mountPath)
                                 PlasmaComponents.ToolTip {
-                                    text: del.mounted ? "Otevřít složku" : "Nejprve připoj"
+                                    text: del.mounted ? "Open folder" : "Mount first"
                                 }
                             }
 
                             PlasmaComponents.Button {
-                                text: del.mounted ? "Odpojit" : "Připojit"
+                                text: del.mounted ? "Unmount" : "Mount"
                                 icon.name: del.mounted ? "media-eject" : "media-playback-start"
                                 highlighted: del.mounted
                                 enabled: rcRunning
@@ -180,8 +180,8 @@ ColumnLayout {
                         width: parent.width - (Kirigami.Units.largeSpacing * 4)
                         visible: remoteList.count === 0 && !loading
                         icon.name: filterText !== "" ? "edit-find" : "folder-cloud"
-                        text: filterText !== "" ? "Žádný remote neodpovídá" : "Žádné rclone remotes"
-                        explanation: filterText !== "" ? "" : "Nastav je: rclone config"
+                        text: filterText !== "" ? "No remotes match" : "No rclone remotes"
+                        explanation: filterText !== "" ? "" : "Configure them: rclone config"
                     }
                 }
             }
@@ -192,7 +192,7 @@ ColumnLayout {
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.smallSpacing
                     PlasmaComponents.Label {
-                        text: Object.keys(activeMounts).length + " / " + remotes.length + " připojeno"
+                        text: Object.keys(activeMounts).length + " / " + remotes.length + " mounted"
                         font.pixelSize: 11
                         opacity: 0.7
                         Layout.fillWidth: true
@@ -232,7 +232,7 @@ ColumnLayout {
                     spacing: Kirigami.Units.smallSpacing
 
                     PlasmaComponents.Label {
-                        text: "Probíhá přenos"
+                        text: "Transfer in progress"
                         font.pixelSize: 11
                         font.bold: true
                         opacity: 0.8
@@ -263,7 +263,8 @@ ColumnLayout {
                             var by = t.bytes || 0
                             return (sz > 0 && by > 0) ? Math.min(99, by / sz * 100) : 0
                         }
-                        property bool indeterminate: pct === 0 && (t.bytes || 0) > 0
+                        // animace jen pokud neznáme velikost (VFS mount); known size → fill bar od 0%
+                        property bool indeterminate: pct === 0 && (t.size || 0) <= 0
                         property string speed: formatSpeed(t.speed || 0)
                         // Směr: upload = lokální zdroj → remote; download = remote → lokální cíl
                         property bool isUpload: {
@@ -361,8 +362,8 @@ ColumnLayout {
 
                 PlasmaComponents.Label {
                     text: transferHistory.length > 0
-                          ? transferHistory.length + " dokončených přenosů"
-                          : "Zatím žádné přenosy"
+                          ? transferHistory.length + " completed transfers"
+                          : "No transfers yet"
                     font.pixelSize: 11
                     opacity: 0.55
                     Layout.fillWidth: true
@@ -372,7 +373,7 @@ ColumnLayout {
                     icon.name: "view-refresh"
                     display: QQC2.AbstractButton.IconOnly
                     onClicked: { checkTransfers(); checkStats() }
-                    PlasmaComponents.ToolTip { text: "Obnovit" }
+                    PlasmaComponents.ToolTip { text: "Refresh" }
                 }
 
                 PlasmaComponents.ToolButton {
@@ -385,7 +386,7 @@ ColumnLayout {
                         return false
                     }
                     onClicked: retryFailed()
-                    PlasmaComponents.ToolTip { text: "Zkusit znovu selhané přenosy" }
+                    PlasmaComponents.ToolTip { text: "Retry failed transfers" }
                 }
             }
 
@@ -453,7 +454,7 @@ ColumnLayout {
                                 spacing: 1
 
                                 PlasmaComponents.Label {
-                                    text: hDel.fileName || "(neznámý soubor)"
+                                    text: hDel.fileName || "(unknown file)"
                                     elide: Text.ElideLeft
                                     Layout.fillWidth: true
                                 }
@@ -524,10 +525,10 @@ ColumnLayout {
                         width: parent.width - (Kirigami.Units.largeSpacing * 4)
                         visible: histList.count === 0 && activeTransfers.length === 0
                         icon.name: "view-history"
-                        text: "Žádná historie přenosů"
+                        text: "No transfer history"
                         explanation: rcRunning
-                                     ? "Historie se zobrazí po dokončení přenosu"
-                                     : "Spusť RC daemon pro sledování"
+                                     ? "History will appear after the first transfer completes"
+                                     : "Start the RC daemon to monitor transfers"
                     }
                 }
             }
@@ -538,7 +539,7 @@ ColumnLayout {
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.smallSpacing
                     PlasmaComponents.Label {
-                        text: rcRunning ? "Daemon běží · :" + rcPort : "Daemon neběží"
+                        text: rcRunning ? "Daemon running · :" + rcPort : "Daemon not running"
                         font.pixelSize: 11
                         opacity: 0.7
                         Layout.fillWidth: true

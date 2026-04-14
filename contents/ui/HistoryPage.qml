@@ -18,7 +18,7 @@ ColumnLayout {
 
         PlasmaComponents.Label {
             text: transferHistory.length > 0
-                  ? transferHistory.length + " přenesených souborů"
+                  ? transferHistory.length + " transferred files"
                   : ""
             font.pixelSize: 11
             opacity: 0.6
@@ -30,14 +30,14 @@ ColumnLayout {
             visible: transferHistory.length > 0
             display: PlasmaComponents.ToolButton.IconOnly
             onClicked: transferHistory = []
-            PlasmaComponents.ToolTip { text: "Vymazat historii" }
+            PlasmaComponents.ToolTip { text: "Clear history" }
         }
 
         PlasmaComponents.ToolButton {
             icon.name: "view-refresh"
             display: PlasmaComponents.ToolButton.IconOnly
             onClicked: checkTransfers()
-            PlasmaComponents.ToolTip { text: "Obnovit" }
+            PlasmaComponents.ToolTip { text: "Refresh" }
         }
     }
 
@@ -103,7 +103,7 @@ ColumnLayout {
                         spacing: 1
 
                         PlasmaComponents.Label {
-                            text: hDel.fileName || "(neznámý soubor)"
+                            text: hDel.fileName || "(unknown file)"
                             font.bold: false
                             elide: Text.ElideLeft
                             Layout.fillWidth: true
@@ -148,10 +148,10 @@ ColumnLayout {
                 width: parent.width - (Kirigami.Units.largeSpacing * 4)
                 visible: histList.count === 0
                 icon.name: "view-history"
-                text: "Žádná historie přenosů"
+                text: "No transfer history"
                 explanation: rcRunning
-                             ? "Historie se zobrazí po dokončení prvního přenosu"
-                             : "Spusť RC daemon pro sledování přenosů"
+                             ? "History will appear after the first transfer completes"
+                             : "Start the RC daemon to monitor transfers"
             }
         }
     }
@@ -162,7 +162,7 @@ ColumnLayout {
         contentItem: RowLayout {
             spacing: Kirigami.Units.smallSpacing
             PlasmaComponents.Label {
-                text: rcRunning ? "Daemon běží na :" + rcPort : "Daemon neběží"
+                text: rcRunning ? "Daemon running on :" + rcPort : "Daemon not running"
                 font.pixelSize: 11
                 opacity: 0.7
                 Layout.fillWidth: true
