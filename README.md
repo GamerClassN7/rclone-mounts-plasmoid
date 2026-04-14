@@ -1,44 +1,44 @@
 # Rclone Mounts — KDE Plasma Plasmoid
 
-Widget pro **KDE Plasma 6** pro správu rclone cloudových úložišť přímo z panelu nebo plochy.
+Widget for **KDE Plasma 6** to manage rclone cloud storage remotes directly from the panel or desktop.
 
-![Záložka Mounts](image.png)
-![Záložka Historie](image-1.png)
-
----
-
-## Popis
-
-Připojuj a odpojuj rclone remoty jedním kliknutím, sleduj historii přenosů a aktivní uploady/downloady — vše bez terminálu.
-
-**Funkce:**
-- Připojení / odpojení remotů jedním kliknutím
-- Historie dokončených přenosů s indikátorem úspěchu / chyby
-- Sledování aktivních přenosů v reálném čase
-- Spuštění a zastavení rclone RC daemona z kontextového menu
-- Vyhledávání remotů
+![Mounts tab](image.png)
+![History tab](image-1.png)
 
 ---
 
-## Instalace
+## Description
+
+Mount and unmount rclone remotes with a single click, track transfer history and active uploads/downloads — all without a terminal.
+
+**Features:**
+- Mount / unmount remotes with one click
+- Transfer history with success / error indicator
+- Real-time active transfer monitoring
+- Start and stop the rclone RC daemon from the context menu
+- Remote search
+
+---
+
+## Installation
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/GamerClassN7/rclone-mounts-plasmoid.git
 cd rclone-mounts-plasmoid
 chmod +x install.sh
 ./install.sh
 ```
 
-Po instalaci: pravý klik na panel nebo plochu → **Přidat widget** → vyhledej **Rclone**.
+After installation: right-click the panel or desktop → **Add Widget** → search for **Rclone**.
 
-> Vyžaduje: `rclone` a KDE Plasma 6
+> Requires: `rclone` and KDE Plasma 6
 
 ---
 
-## Licence
+## License
 
 GPL-2.0+
 
 ---
 
-**Klíčová slova:** rclone, KDE Plasma, plasmoid, widget, cloud storage, mount, Google Drive, OneDrive, S3
+**Keywords:** rclone, KDE Plasma, plasmoid, widget, cloud storage, mount, Google Drive, OneDrive, S3

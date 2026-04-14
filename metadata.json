@@ -9,7 +9,7 @@
         ],
         "BugReportUrl": "",
         "Category": "System Information",
-        "Description": "Správa Rclone mount pointů z KDE Plasma panelu.",
+        "Description": "Manage Rclone mount points from the KDE Plasma panel.",
         "EnabledByDefault": true,
         "FormFactors": [
             "desktop",
