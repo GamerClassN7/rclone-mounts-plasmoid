@@ -19,17 +19,16 @@ if ! command -v rclone &>/dev/null; then
 fi
 echo "✅ $(rclone --version | head -1)"
 
-# ── Odinstaluj starou verzi ───────────────────────────────────────────────────
+# ── Instalace / upgrade plasmoidu ────────────────────────────────────────────
 echo ""
 echo "📦 Installing plasmoid..."
 if kpackagetool6 --list --type Plasma/Applet 2>/dev/null | grep -q "$PLASMOID_ID"; then
-    kpackagetool6 --type Plasma/Applet --remove "$PLASMOID_ID" 2>/dev/null || true
-    echo "   ♻️  Old version removed"
+    kpackagetool6 --type Plasma/Applet --upgrade "$PLASMOID_DIR"
+    echo "   ♻️  Plasmoid upgraded (settings preserved)"
+else
+    kpackagetool6 --type Plasma/Applet --install "$PLASMOID_DIR"
+    echo "   ✅ Plasmoid installed"
 fi
-
-# Instalace
-kpackagetool6 --type Plasma/Applet --install "$PLASMOID_DIR"
-echo "   ✅ Plasmoid installed"
 
 # ── Adresář pro mounty ────────────────────────────────────────────────────────
 MOUNT_BASE="$HOME/mnt/rclone"

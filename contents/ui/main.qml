@@ -364,12 +364,18 @@ PlasmoidItem {
 
     function doMount(remote) {
         var path = mountBase + "/" + remote.replace(/:$/, "")
-        errorMsg = "Mounting " + remote + "..."
-        exe.run("mkdir -p '" + path + "' && rclone rc mount/mount fs=" + remote
-                + " mountPoint='" + path + "' --rc-addr=" + rcAddr)
+        var cacheBase = (homeDir !== "" ? homeDir : "$HOME") + "/.cache/rclone-mounts"
+        var cacheDir = cacheBase + "/" + remote.replace(/:$/, "")
+        errorMsg = ""
+        var opts = " -o vfs-cache-mode=writes -o vfs-write-back=1s"
+               + " -o attr-timeout=1s -o dir-cache-time=5s"
+               + " -o cache-dir='" + cacheDir + "'"
+        exe.run("mkdir -p '" + path + "' '" + cacheDir + "' && rclone rc mount/mount fs=" + remote
+            + " mountPoint='" + path + "'" + opts
+            + " --exclude '*.*swp' --exclude '*.trashinfo' --rc-addr=" + rcAddr + " 2>&1")
     }
     function doUnmount(mp) {
-        errorMsg = "Unmounting..."
+        errorMsg = ""
         exe.run("rclone rc mount/unmount mountPoint='" + mp + "' --rc-addr=" + rcAddr)
     }
 
