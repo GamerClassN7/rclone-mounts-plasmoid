@@ -8,37 +8,37 @@ PLASMOID_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLASMOID_ID="org.kde.plasma.rclone-mounts"
 
 echo "================================================="
-echo "  Rclone Mounts Plasmoid – Instalátor"
+echo "  Rclone Mounts Plasmoid - Installer"
 echo "================================================="
 echo ""
 
 # Kontrola rclone
 if ! command -v rclone &>/dev/null; then
-    echo "❌ rclone nenalezen! Nainstaluj: https://rclone.org/install/"
+    echo "❌ rclone not found! Install it from: https://rclone.org/install/"
     exit 1
 fi
 echo "✅ $(rclone --version | head -1)"
 
 # ── Odinstaluj starou verzi ───────────────────────────────────────────────────
 echo ""
-echo "📦 Instaluji plasmoid..."
+echo "📦 Installing plasmoid..."
 if kpackagetool6 --list --type Plasma/Applet 2>/dev/null | grep -q "$PLASMOID_ID"; then
     kpackagetool6 --type Plasma/Applet --remove "$PLASMOID_ID" 2>/dev/null || true
-    echo "   ♻️  Stará verze odstraněna"
+    echo "   ♻️  Old version removed"
 fi
 
 # Instalace
 kpackagetool6 --type Plasma/Applet --install "$PLASMOID_DIR"
-echo "   ✅ Plasmoid nainstalován"
+echo "   ✅ Plasmoid installed"
 
 # ── Adresář pro mounty ────────────────────────────────────────────────────────
 MOUNT_BASE="$HOME/mnt/rclone"
 mkdir -p "$MOUNT_BASE"
-echo "   📁 Adresář pro mounty: $MOUNT_BASE"
+echo "   📁 Mount directory: $MOUNT_BASE"
 
 # ── Systemd user service pro RC daemon ───────────────────────────────────────
 echo ""
-echo "🔧 Nastavuji autostart rclone RC daemon..."
+echo "🔧 Configuring rclone RC daemon autostart..."
 
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 mkdir -p "$SYSTEMD_DIR"
@@ -63,24 +63,25 @@ systemctl --user enable rclone-rc.service
 systemctl --user start rclone-rc.service
 
 if systemctl --user is-active --quiet rclone-rc.service; then
-    echo "   ✅ RC Daemon spuštěn a nastaven na autostart"
+    echo "   ✅ RC daemon started and enabled at login"
 else
-    echo "   ⚠️  Daemon se nespustil – zkontroluj: systemctl --user status rclone-rc"
+    echo "   ⚠️  Daemon failed to start - check: systemctl --user status rclone-rc"
 fi
 
 # ── Restart Plasma shellu ─────────────────────────────────────────────────────
 echo ""
-echo "🔄 Restartuji Plasma shell (widget se načte za chvíli)..."
+echo "🔄 Restarting Plasma shell (widget will load in a moment)..."
 kquitapp6 plasmashell 2>/dev/null || true
 sleep 1
 kstart6 plasmashell &>/dev/null &
+systemctl --user restart plasma-plasmashell.service
 
 echo ""
 echo "================================================="
-echo "✅ Hotovo!"
+echo "✅ Done!"
 echo "================================================="
 echo ""
-echo "Přidej widget: pravý klik na plochu → Přidat widget → 'Rclone'"
+echo "Add widget: right-click desktop -> Add Widgets -> 'Rclone'"
 echo ""
-echo "Stav RC daemona: systemctl --user status rclone-rc"
+echo "RC daemon status: systemctl --user status rclone-rc"
 echo ""
