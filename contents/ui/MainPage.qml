@@ -142,6 +142,21 @@ ColumnLayout {
                                 }
                             }
 
+                            // Auto-mount pin – připojit automaticky při startu sítě
+                            PlasmaComponents.ToolButton {
+                                property bool pinned: autoMountList.indexOf(del.remote) >= 0
+                                icon.name: pinned ? "network-connect" : "network-disconnect"
+                                opacity: (pinned || del.hovered) ? 1.0 : 0.25
+                                display: QQC2.AbstractButton.IconOnly
+                                Layout.alignment: Qt.AlignVCenter
+                                onClicked: toggleAutoMount(del.remote)
+                                PlasmaComponents.ToolTip {
+                                    text: autoMountList.indexOf(del.remote) >= 0
+                                          ? "Auto-mount zapnut – klikni pro vypnutí"
+                                          : "Zapnout auto-mount při připojení sítě"
+                                }
+                            }
+
                             // Otevřít složku – vždy viditelné, disabled když není připojeno
                             PlasmaComponents.ToolButton {
                                 icon.name: "document-open-folder"
@@ -458,7 +473,11 @@ ColumnLayout {
                                     text: {
                                         var parts = []
                                         if (hDel.hasError) parts.push(hDel.shortError)
-                                        else parts.push(formatSize(hDel.entry.size || hDel.entry.bytes || 0))
+                                        else {
+                                            // size=-1 znamená upload (velikost neznámá předem) → použij bytes
+                                            var sz = (hDel.entry.size > 0) ? hDel.entry.size : (hDel.entry.bytes || 0)
+                                            parts.push(formatSize(sz))
+                                        }
                                         if (hDel.filePath) parts.push(hDel.filePath)
                                         return parts.join("  •  ")
                                     }

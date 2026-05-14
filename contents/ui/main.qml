@@ -70,6 +70,7 @@ PlasmoidItem {
     property var    transferHistory: []   // dokončené přenosy
     property var    activeTransfers: []   // právě probíhající
     property var    _activePctCache: ({}) // clamped pct per filename – nikdy neklesá
+    property var    autoMountList:   []   // remoty s auto-mount při startu sítě
 
     // ── Pomocné funkce ───────────────────────────────────────────────────────
     function formatSize(bytes) {
@@ -179,6 +180,13 @@ PlasmoidItem {
         if (cmd.indexOf("echo $HOME") !== -1) {
             if (code === 0) homeDir = out
             fetchRemotes()
+            loadAutoMounts()
+            return
+        }
+        if (cmd.indexOf("automount.conf") !== -1 && cmd.indexOf("echo") === -1) {
+            autoMountList = (code === 0 && out !== "")
+                ? out.split("\n").map(function(l){ return l.trim() }).filter(function(l){ return l.length > 0 })
+                : []
             return
         }
         if (cmd.indexOf("listremotes") !== -1) {
@@ -339,6 +347,29 @@ PlasmoidItem {
 
     function fetchRemotes()   { loading = true; exe.run("rclone listremotes --long") }
     function checkDaemon()    { exe.run("rclone rc mount/listmounts --rc-addr=" + rcAddr + " 2>&1") }
+
+    // ── Auto-mount ────────────────────────────────────────────────────────────
+    property string _amConf: homeDir !== "" ? homeDir + "/.config/rclone-plasmoid/automount.conf" : ""
+
+    function loadAutoMounts() {
+        if (homeDir === "") return
+        exe.run("cat '" + homeDir + "/.config/rclone-plasmoid/automount.conf' 2>/dev/null || true")
+    }
+
+    function toggleAutoMount(remote) {
+        if (homeDir === "") return
+        var conf = homeDir + "/.config/rclone-plasmoid/automount.conf"
+        var idx = autoMountList.indexOf(remote)
+        if (idx >= 0) {
+            exe.run("grep -vxF '" + remote + "' '" + conf + "' > /tmp/.rclone-am-tmp && mv /tmp/.rclone-am-tmp '" + conf + "'")
+            var removed = autoMountList.slice()
+            removed.splice(idx, 1)
+            autoMountList = removed
+        } else {
+            exe.run("mkdir -p '" + homeDir + "/.config/rclone-plasmoid' && echo '" + remote + "' >> '" + conf + "'")
+            autoMountList = autoMountList.concat([remote])
+        }
+    }
     function checkTransfers() { if (rcRunning) exe.run("rclone rc core/transferred --rc-addr=" + rcAddr + " 2>&1") }
     function checkStats()     { if (rcRunning) exe.run("rclone rc core/stats --rc-addr=" + rcAddr + " 2>&1") }
     function startDaemon()    { errorMsg = "Starting..."; exe.run("rclone rcd --rc-addr=" + rcAddr + " --rc-no-auth &") }
@@ -347,10 +378,22 @@ PlasmoidItem {
     // Vytáhne čitelnou část chyby – odstraní JSON blok "Details: [...]" od rclone/Google API
     function cleanError(errStr) {
         if (!errStr) return ""
-        var di = errStr.indexOf("\nDetails:")
-        var clean = di > 0 ? errStr.substring(0, di).trim() : errStr
-        var nl = clean.indexOf("\n")
-        return nl > 0 ? clean.substring(0, nl).trim() : clean
+        var clean = errStr
+        // Odstraň "Details:" blok (s nebo bez předchozího \n)
+        var di = clean.indexOf("Details:")
+        if (di > 0) clean = clean.substring(0, di).trim()
+        // Odstraň JSON bloky (vše od první "{")
+        var ji = clean.indexOf("{")
+        if (ji > 0) clean = clean.substring(0, ji).trim()
+        // Vezmi jen první neprázdný řádek
+        var lines = clean.split("\n")
+        for (var i = 0; i < lines.length; i++) {
+            var l = lines[i].trim()
+            if (l.length > 0) {
+                return l.length > 80 ? l.substring(0, 77) + "…" : l
+            }
+        }
+        return clean.trim()
     }
 
     // Zkusí znovu nahrát soubory selháním přes VFS refresh na všech aktivních mountech
