@@ -116,12 +116,22 @@ set -euo pipefail
 CONF="$HOME/.config/rclone-plasmoid/automount.conf"
 RC_ADDR="localhost:5572"
 
-# Čti mountBase z konfig souboru widgetu; fallback na výchozí
+# Čti mountBase z konfig souboru widgetu; fallback na nastavení plasmoidu; pak výchozí
 WIDGET_CONF="$HOME/.config/rclone-plasmoid/config"
+APPLETS_RC="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 MOUNT_BASE="$HOME/mnt/rclone"
+_val=""
 if [ -f "$WIDGET_CONF" ]; then
-    _val="$(grep '^mountBase=' "$WIDGET_CONF" 2>/dev/null | cut -d= -f2- | tr -d '\n')"
-    [ -n "$_val" ] && MOUNT_BASE="$_val"
+    _val="$(grep '^mountBase=' "$WIDGET_CONF" 2>/dev/null | head -1 | cut -d= -f2- | tr -d '\n' || true)"
+fi
+if [ -z "$_val" ] && [ -f "$APPLETS_RC" ]; then
+    _val="$(grep '^mountBase=' "$APPLETS_RC" 2>/dev/null | grep -v '^mountBase=$' | head -1 | cut -d= -f2- | tr -d '\n' || true)"
+fi
+if [ -n "$_val" ]; then
+    # Rozbal $HOME a ~ (plasmoid může uložit nerozbalenou cestu)
+    _val="${_val//\$HOME/$HOME}"
+    _val="${_val/#\~/$HOME}"
+    MOUNT_BASE="${_val%/}"
 fi
 echo "[rclone-automount] Mount base: $MOUNT_BASE"
 
